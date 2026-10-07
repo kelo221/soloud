@@ -341,7 +341,10 @@ namespace SoLoud
 
 	result WavStreamInstance::seek(double aSeconds, float* mScratch, unsigned int mScratchSize)
 	{
-		if (mCodec.mOgg)
+		// mCodec is a union: for WAV/FLAC/MP3 streams mCodec.mOgg aliases mWav/mFlac/mMp3 and is
+		// non-null, so the old bare `if (mCodec.mOgg)` ran stb_vorbis_seek on a dr_wav struct and
+		// corrupted the heap. Gate on the real file type.
+		if (mParent->mFiletype == WAVSTREAM_OGG && mCodec.mOgg)
 		{
 			int pos = (int)floor(mBaseSamplerate * aSeconds);
 			stb_vorbis_seek(mCodec.mOgg, pos);
