@@ -113,6 +113,8 @@ namespace SoLoud
 			{
 				mVoice[ch]->mFlags &= ~AudioSourceInstance::PROTECTED;
 			}
+			// Protection decides which voices are mixed.
+			mActiveVoiceDirty = true;
 		FOR_ALL_VOICES_POST
 	}
 
