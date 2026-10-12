@@ -1150,10 +1150,10 @@ namespace SoLoud
 						pan1.mData[1] = pan[1] + pani[1] * 2;
 						pan1.mData[2] = pan[1] + pani[1] * 3;
 						pan1.mData[3] = pan[1] + pani[1] * 4;
-						pani[0] *= 4;
-						pani[1] *= 4;
-						__m128 pan0delta = _mm_load_ps1(&pani[0]);
-						__m128 pan1delta = _mm_load_ps1(&pani[1]);
+						// pani stays per-sample: the leftover loop below continues the ramp.
+						float quadstep[2] = { pani[0] * 4, pani[1] * 4 };
+						__m128 pan0delta = _mm_load_ps1(&quadstep[0]);
+						__m128 pan1delta = _mm_load_ps1(&quadstep[1]);
 						__m128 p0 = _mm_load_ps(pan0.mData);
 						__m128 p1 = _mm_load_ps(pan1.mData);
 
@@ -1176,6 +1176,8 @@ namespace SoLoud
 					}
 					
 					// If buffer size or samples to read are not divisible by 4, handle leftovers
+					pan[0] += pani[0] * c;
+					pan[1] += pani[1] * c;
 					for (j = c; j < aSamplesToRead; j++)
 					{
 						pan[0] += pani[0];
@@ -1215,10 +1217,10 @@ namespace SoLoud
 						pan1.mData[1] = pan[1] + pani[1] * 2;
 						pan1.mData[2] = pan[1] + pani[1] * 3;
 						pan1.mData[3] = pan[1] + pani[1] * 4;
-						pani[0] *= 4;
-						pani[1] *= 4;
-						__m128 pan0delta = _mm_load_ps1(&pani[0]);
-						__m128 pan1delta = _mm_load_ps1(&pani[1]);
+						// pani stays per-sample: the leftover loop below continues the ramp.
+						float quadstep[2] = { pani[0] * 4, pani[1] * 4 };
+						__m128 pan0delta = _mm_load_ps1(&quadstep[0]);
+						__m128 pan1delta = _mm_load_ps1(&quadstep[1]);
 						__m128 p0 = _mm_load_ps(pan0.mData);
 						__m128 p1 = _mm_load_ps(pan1.mData);
 
@@ -1239,6 +1241,8 @@ namespace SoLoud
 						}
 					}
 					// If buffer size or samples to read are not divisible by 4, handle leftovers
+					pan[0] += pani[0] * c;
+					pan[1] += pani[1] * c;
 					for (j = c; j < aSamplesToRead; j++)
 					{
 						pan[0] += pani[0];
