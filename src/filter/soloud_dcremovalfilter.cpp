@@ -45,6 +45,9 @@ namespace SoLoud
 		if (mBuffer == 0)
 		{
 			mBufferLength = (int)ceil(mLength * aSamplerate);
+			// A length beyond the int range converts to INT_MIN.
+			if (mBufferLength < 1)
+				mBufferLength = 1;
 			mBuffer = new float[mBufferLength * aChannels];
 			mTotals = new float[aChannels];
 			unsigned int i;
