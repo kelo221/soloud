@@ -178,7 +178,9 @@ namespace SoLoud
 			}
 			offset = aSeconds;
 		}
-		int samples_to_discard = (int)floor(mSamplerate * offset);
+		// mStreamPosition counts seconds of source, so the relative play speed
+		// in mSamplerate does not apply.
+		int samples_to_discard = (int)floor(mBaseSamplerate * offset);
 
 		while (samples_to_discard > 0)
 		{
