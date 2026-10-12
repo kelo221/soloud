@@ -22,6 +22,7 @@ freely, subject to the following restrictions:
    distribution.
 */
 
+#include <string.h>
 #include "soloud.h"
 
 namespace SoLoud
@@ -42,7 +43,13 @@ namespace SoLoud
 		unsigned int copyofs = 0;
 		while (copycount && mParent->mCount)
 		{
-			int readcount = mParent->mSource[mParent->mReadIndex]->getAudio(aBuffer + copyofs, copycount, aBufferSize);
+			AudioSourceInstance *source = mParent->mSource[mParent->mReadIndex];
+			int readcount = source->getAudio(aBuffer + copyofs, copycount, aBufferSize);
+			// The queue's channels the source does not have would otherwise
+			// keep whatever the buffer held, such as an earlier block's audio.
+			unsigned int k;
+			for (k = source->mChannels; k < mChannels; k++)
+				memset(aBuffer + copyofs + k * aBufferSize, 0, sizeof(float) * readcount);
 			copyofs += readcount;
 			copycount -= readcount;
 			// A source that gives no audio without ending (a looping sound at its
