@@ -39,6 +39,9 @@ requests are still open there.
 | `EchoFilter` crashed (division by zero) when its delay was set or faded to 0. | — | |
 | `DCRemovalFilter` read its parent filter at the first mix rather than at `play`, so a filter destroyed after `play` was used after being freed. A length too long for an `int` wrote at a negative offset. | — | |
 | `BiquadResonantFilter` read the sample before its buffer when given a single sample (a global filter in a one-frame mix). | — | |
+| `FreeverbFilter` on mono audio hit an assert (a breakpoint even in MSVC release builds), or without asserts processed the next block of memory as the right channel. Mono audio is now left unchanged. | — | |
+| `RobotizeFilter` crashed (division by zero) when its frequency was above the sample rate, 0 or negative. | — | |
+| `FlangerFilter` crashed (division by zero) when its delay was set or faded to 0. | — | |
 
 ### Wrong behavior
 
@@ -54,7 +57,10 @@ requests are still open there.
 | With a loop point above 0, every loop wrap overwrote up to 511 frames of the voice that had already been mixed in that call with other audio from the sound. | — | |
 | `BiquadResonantFilter` went unstable and produced infinity and NaN, silencing the whole mix, when its frequency was at or above half the rate it filters at. Voice filters run at the voice's own rate, so a slowed-down voice could trigger it with an ordinary cutoff. The frequency is now kept below that limit. | — | |
 | `WaveShaperFilter` at its minimum amount of -1 (or past the curve's pole for other negative amounts) divided by zero and produced NaN. | — | |
-| Every time-domain filter's `setParams` accepted NaN. | — | |
+| Every filter's `setParams` with a validity check accepted NaN. | — | |
+| `FreeverbFilter` ignored the room size, damping and width given to `setParams` until some parameter was changed on the playing instance. | — | |
+| `FreeverbFilter` and `RobotizeFilter` ignored `fadeFilterParameter` and `oscillateFilterParameter`. | — | |
+| `FlangerFilter` advanced its sweep once per channel per frame, so the channels of a stereo sound were swept differently and twice as fast as set. | — | |
 | On Windows, `M_PI` was defined with only 12 digits (MSVC does not define it), so panning, filters, 3D audio and generators differed slightly from other platforms, and a hard-panned voice leaked about -240 dB into the other side. | — | |
 | The end of a sound was cut off, with a click, whenever a mix call ended partway through its last 512-frame block: with device buffers that are not a multiple of 512 frames (WASAPI's usually are not) or with any resampling. Up to one block of the source was lost, for example 600 frames of a 1000-frame sound at speed 0.73 in 256-frame calls. | — | |
 
