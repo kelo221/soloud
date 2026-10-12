@@ -156,6 +156,10 @@ namespace SoLoud
 
 	result AudioSourceInstance::seek(double aSeconds, float *mScratch, unsigned int mScratchSize)
 	{
+		// The discard loop below needs room for at least one frame per pass.
+		if (mChannels == 0 || mScratch == NULL || mScratchSize < mChannels)
+			return INVALID_PARAMETER;
+
 		double offset = aSeconds - mStreamPosition;
 		if (offset <= 0)
 		{
@@ -168,7 +172,7 @@ namespace SoLoud
 		}
 		int samples_to_discard = (int)floor(mSamplerate * offset);
 
-		while (samples_to_discard)
+		while (samples_to_discard > 0)
 		{
 			int samples = mScratchSize / mChannels;
 			if (samples > samples_to_discard)
