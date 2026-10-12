@@ -1929,8 +1929,8 @@ namespace SoLoud
 	{
 		if (!mResampleDataOwner)
 			return; // not initialized; nothing can be mixed yet
-		SOLOUD_ASSERT(mMaxActiveVoices < 256);
-		char live[256];
+		SOLOUD_ASSERT(mMaxActiveVoices < VOICE_COUNT);
+		char live[VOICE_COUNT];
 		memset(live, 0, mMaxActiveVoices);
 		unsigned int i, j;
 		for (i = 0; i < mMaxActiveVoices; i++)
