@@ -42,6 +42,9 @@ requests are still open there.
 | `FreeverbFilter` on mono audio hit an assert (a breakpoint even in MSVC release builds), or without asserts processed the next block of memory as the right channel. Mono audio is now left unchanged. | — | |
 | `RobotizeFilter` crashed (division by zero) when its frequency was above the sample rate, 0 or negative. | — | |
 | `FlangerFilter` crashed (division by zero) when its delay was set or faded to 0. | — | |
+| `Soloud::seek` on a bus hit an assert (a breakpoint even in MSVC release builds) or crashed in the SSE pan code for most seek lengths, and overran the bus's buffer for voices with more channels than the bus. | — | |
+| `Soloud::seek` on a bus right after a voice was stopped and another played into its slot wrote through a null pointer. | — | |
+| `Bus::getApproximateVolume` read past its array for channel 8 of an 8-channel bus. | — | |
 
 ### Wrong behavior
 
