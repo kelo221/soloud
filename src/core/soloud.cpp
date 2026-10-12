@@ -1981,7 +1981,9 @@ namespace SoLoud
 			{
 				mActiveVoice[candidates] = i;
 				candidates++;
-				if (mVoice[i]->mFlags & AudioSourceInstance::INAUDIBLE_TICK)
+				// Ticking and protected voices are kept ahead of the volume sort;
+				// protected voices are documented as always played.
+				if (mVoice[i]->mFlags & (AudioSourceInstance::INAUDIBLE_TICK | AudioSourceInstance::PROTECTED))
 				{
 					mActiveVoice[candidates - 1] = mActiveVoice[mustlive];
 					mActiveVoice[mustlive] = i;
