@@ -38,5 +38,8 @@ print_option_status (SOLOUD_BACKEND_WINMM "WINMM backend")
 option (SOLOUD_BACKEND_WASAPI "Set to ON for building WASAPI backend" OFF)
 print_option_status (SOLOUD_BACKEND_WASAPI "WASAPI backend")
 
+option (SOLOUD_BACKEND_MINIAUDIO "Set to ON for building MiniAudio backend" OFF)
+print_option_status (SOLOUD_BACKEND_MINIAUDIO "MiniAudio backend")
+
 option (SOLOUD_GENERATE_GLUE "Set to ON for generating the Glue APIs" OFF)
 print_option_status (SOLOUD_GENERATE_GLUE "Generate Glue")

@@ -248,6 +248,26 @@ if (SOLOUD_BACKEND_WASAPI)
 	)
 endif()
 
+if (SOLOUD_BACKEND_MINIAUDIO)
+	add_definitions (-DWITH_MINIAUDIO)
+
+	set (BACKENDS_SOURCES
+		${BACKENDS_SOURCES}
+		${BACKENDS_PATH}/miniaudio/soloud_miniaudio.cpp
+	)
+
+	# miniaudio loads ALSA, PulseAudio and JACK at run time.
+	if (UNIX AND NOT APPLE)
+		find_package (Threads REQUIRED)
+		set (LINK_LIBRARIES
+			${LINK_LIBRARIES}
+			${CMAKE_DL_LIBS}
+			Threads::Threads
+			m
+		)
+	endif()
+endif()
+
 # Filters
 set (FILTERS_PATH ${SOURCE_PATH}/filter)
 set (FILTERS_SOURCES
