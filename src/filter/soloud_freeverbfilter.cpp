@@ -477,7 +477,6 @@ namespace SoLoud
 
 	void FreeverbFilterInstance::filter(float* aBuffer, unsigned int aSamples, unsigned int aBufferSize, unsigned int aChannels, float aSamplerate, time aTime)
 	{
-		SOLOUD_ASSERT(aChannels == 2); // Only stereo supported at this time
 		if (mParamChanged)
 		{
 			mModel->setdamp(mParam[DAMP]);
@@ -488,6 +487,11 @@ namespace SoLoud
 			mModel->setdry(1 - mParam[WET]);
 			mParamChanged = 0;
 		}
+		// Only stereo is supported: the first two channels are processed, and
+		// mono audio is left as it is (its "right channel" would be the next
+		// block).
+		if (aChannels < 2)
+			return;
 		mModel->process(aBuffer, aSamples, aBufferSize);
 	}
 
