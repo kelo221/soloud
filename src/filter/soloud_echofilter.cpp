@@ -46,6 +46,9 @@ namespace SoLoud
 		{
 			// We only know channels and sample rate at this point.. not really optimal
 			mBufferMaxLength = (int)ceil(mParam[EchoFilter::DELAY] * aSamplerate);
+			// The delay line needs a frame; a delay of 0 feeds back each frame.
+			if (mBufferMaxLength < 1)
+				mBufferMaxLength = 1;
 			mBuffer = new float[mBufferMaxLength * aChannels];
 			unsigned int i;
 			for (i = 0; i < mBufferMaxLength * aChannels; i++)
@@ -57,6 +60,8 @@ namespace SoLoud
 		mBufferLength = (int)ceil(mParam[EchoFilter::DELAY] * aSamplerate);
 		if (mBufferLength > mBufferMaxLength)
 			mBufferLength = mBufferMaxLength;
+		if (mBufferLength < 1)
+			mBufferLength = 1;
 
 		unsigned int i, j;
 		int prevofs = (mOffset + mBufferLength - 1) % mBufferLength;
