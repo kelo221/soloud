@@ -36,10 +36,12 @@ namespace SoLoud
 		initParams(3);
 		mParam[SAMPLERATE] = aParent->mSampleRate;
 		mParam[BITDEPTH] = aParent->mBitdepth;
-		mChannelData[0].mSample = 0;
-		mChannelData[0].mSamplesToSkip = 0;
-		mChannelData[1].mSample = 0;
-		mChannelData[1].mSamplesToSkip = 0;
+		int i;
+		for (i = 0; i < MAX_CHANNELS; i++)
+		{
+			mChannelData[i].mSample = 0;
+			mChannelData[i].mSamplesToSkip = 0;
+		}
 	}
 
 	void LofiFilterInstance::filterChannel(float *aBuffer, unsigned int aSamples, float aSamplerate, double aTime, unsigned int aChannel, unsigned int /*aChannels*/)
