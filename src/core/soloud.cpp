@@ -599,6 +599,9 @@ namespace SoLoud
 		if (mScratchSize < 4096) mScratchSize = 4096;
 		mScratch.init(mScratchSize * MAX_CHANNELS);
 		mOutputScratch.init(mScratchSize * MAX_CHANNELS);
+		// Re-init, or setMaxActiveVoiceCount before init, already allocated these.
+		delete[] mResampleData;
+		delete[] mResampleDataOwner;
 		mResampleData = new float*[mMaxActiveVoices * 2];
 		mResampleDataOwner = new AudioSourceInstance*[mMaxActiveVoices];
 		mResampleDataBuffer.init(mMaxActiveVoices * 2 * SAMPLE_GRANULARITY * MAX_CHANNELS);
@@ -1924,6 +1927,8 @@ namespace SoLoud
 
 	void Soloud::mapResampleBuffers_internal()
 	{
+		if (!mResampleDataOwner)
+			return; // not initialized; nothing can be mixed yet
 		SOLOUD_ASSERT(mMaxActiveVoices < 256);
 		char live[256];
 		memset(live, 0, mMaxActiveVoices);

@@ -125,7 +125,8 @@ namespace SoLoud
 			mVoice[aVoice] = 0;
 
 			unsigned int i;
-			for (i = 0; i < mMaxActiveVoices; i++)
+			// The owner array does not exist until a successful init.
+			for (i = 0; mResampleDataOwner && i < mMaxActiveVoices; i++)
 			{
 				if (mResampleDataOwner[i] == v)
 				{
