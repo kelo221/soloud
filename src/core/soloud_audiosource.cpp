@@ -282,10 +282,7 @@ namespace SoLoud
 
 	void AudioSource::stop()
 	{
-		if (mSoloud)
-		{
-			mSoloud->stopAudioSource(*this);
-		}
+		Soloud::stopAudioSourceOnAllEngines_internal(*this);
 	}
 
 	void AudioSource::set3dMinMaxDistance(float aMinDistance, float aMaxDistance)

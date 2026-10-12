@@ -53,6 +53,24 @@ freely, subject to the following restrictions:
 
 namespace SoLoud
 {
+	namespace
+	{
+		// The live engines and the next sound ID. Never destroyed, so engines
+		// and sounds in static storage can still use it at exit.
+		struct EngineRegistry
+		{
+			void *mMutex;
+			Soloud *mFirst;
+			unsigned int mNextAudioSourceID;
+		};
+
+		EngineRegistry &engineRegistry()
+		{
+			static EngineRegistry registry = { Thread::createMutex(), 0, 1 };
+			return registry;
+		}
+	}
+
 	AlignedFloatBuffer::AlignedFloatBuffer()
 	{
 		mBasePtr = 0;
@@ -113,7 +131,8 @@ namespace SoLoud
 		mGlobalVolume = 0;
 		mPlayIndex = 0;
 		mBackendData = NULL;
-		mAudioThreadMutex = NULL;
+		// Lives as long as the engine: a sound can be stopped on any engine, initialized or not.
+		mAudioThreadMutex = Thread::createMutex();
 		mPostClipScaler = 0;
 		mBackendCleanupFunc = NULL;
 		mBackendPauseFunc = NULL;
@@ -121,7 +140,6 @@ namespace SoLoud
 		mChannels = 2;		
 		mStreamTime = 0;
 		mLastClockedTime = 0;
-		mAudioSourceID = 1;
 		mBackendString = 0;
 		mBackendID = 0;
 		mActiveVoiceDirty = true;
@@ -170,10 +188,26 @@ namespace SoLoud
 		mResampleDataOwner = NULL;
 		for (i = 0; i < 3 * MAX_CHANNELS; i++)
 			m3dSpeakerPosition[i] = 0;
+
+		EngineRegistry &registry = engineRegistry();
+		Thread::lockMutex(registry.mMutex);
+		mNextEngine = registry.mFirst;
+		registry.mFirst = this;
+		Thread::unlockMutex(registry.mMutex);
 	}
 
 	Soloud::~Soloud()
 	{
+		// Leave the list first; this waits for a sound being stopped on another thread to finish with this engine.
+		EngineRegistry &registry = engineRegistry();
+		Thread::lockMutex(registry.mMutex);
+		Soloud **link = &registry.mFirst;
+		while (*link && *link != this)
+			link = &(*link)->mNextEngine;
+		if (*link)
+			*link = mNextEngine;
+		Thread::unlockMutex(registry.mMutex);
+
 		// let's stop all sounds before deinit, so we don't mess up our mutexes
 		stopAll();
 		deinit();
@@ -187,6 +221,8 @@ namespace SoLoud
 		delete[] mVoiceGroup;
 		delete[] mResampleData;
 		delete[] mResampleDataOwner;
+		if (mAudioThreadMutex)
+			Thread::destroyMutex(mAudioThreadMutex);
 	}
 
 	void Soloud::deinit()
@@ -199,9 +235,6 @@ namespace SoLoud
 		if (mBackendCleanupFunc)
 			mBackendCleanupFunc(this);
 		mBackendCleanupFunc = 0;
-		if (mAudioThreadMutex)
-			Thread::destroyMutex(mAudioThreadMutex);
-		mAudioThreadMutex = NULL;
 	}
 
 	result Soloud::init(unsigned int aFlags, unsigned int aBackend, unsigned int aSamplerate, unsigned int aBufferSize, unsigned int aChannels)
@@ -210,8 +243,6 @@ namespace SoLoud
 			return INVALID_PARAMETER;
 
 		deinit();
-
-		mAudioThreadMutex = Thread::createMutex();
 
 		mBackendID = 0;
 		mBackendString = 0;
@@ -590,6 +621,8 @@ namespace SoLoud
 
 	void Soloud::postinit_internal(unsigned int aSamplerate, unsigned int aBufferSize, unsigned int aFlags, unsigned int aChannels)
 	{		
+		// Another thread may be stopping a sound on this engine.
+		lockAudioMutex_internal();
 		mGlobalVolume = 1;
 		mChannels = aChannels;
 		mSamplerate = aSamplerate;
@@ -703,6 +736,7 @@ namespace SoLoud
 			m3dSpeakerPosition[7 * 3 + 2] = -1;
 			break;
 		}
+		unlockAudioMutex_internal();
 	}
 
 	const char * Soloud::getErrorString(result aErrorCode) const
@@ -2339,6 +2373,30 @@ namespace SoLoud
 				c++;
 			}
 		}
+	}
+
+	void Soloud::assignAudioSourceID_internal(AudioSource &aSound)
+	{
+		EngineRegistry &registry = engineRegistry();
+		Thread::lockMutex(registry.mMutex);
+		if (!aSound.mAudioSourceID)
+		{
+			aSound.mAudioSourceID = registry.mNextAudioSourceID++;
+			if (registry.mNextAudioSourceID == 0)
+				registry.mNextAudioSourceID = 1;
+		}
+		Thread::unlockMutex(registry.mMutex);
+	}
+
+	void Soloud::stopAudioSourceOnAllEngines_internal(AudioSource &aSound)
+	{
+		if (!aSound.mAudioSourceID)
+			return;
+		EngineRegistry &registry = engineRegistry();
+		Thread::lockMutex(registry.mMutex);
+		for (Soloud *engine = registry.mFirst; engine; engine = engine->mNextEngine)
+			engine->stopAudioSource(aSound);
+		Thread::unlockMutex(registry.mMutex);
 	}
 
 	void Soloud::lockAudioMutex_internal()

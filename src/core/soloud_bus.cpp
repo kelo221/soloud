@@ -31,6 +31,7 @@ namespace SoLoud
 	BusInstance::BusInstance(Bus *aParent)
 	{
 		mParent = aParent;
+		mSoloud = aParent->mSoloud;
 		mFlags |= PROTECTED | INAUDIBLE_TICK;		
 		for (int i = 0; i < MAX_CHANNELS; i++)
 			mVisualizationChannelVolume[i] = 0;
@@ -52,7 +53,7 @@ namespace SoLoud
 			return aSamplesToRead;
 		}
 		
-		Soloud *s = mParent->mSoloud;
+		Soloud *s = mSoloud;
 		
 		s->mixBus_internal(aBuffer, aSamplesToRead, aBufferSize, mScratch.mData, handle, mSamplerate, mChannels, mParent->mResampler);
 
@@ -107,15 +108,23 @@ namespace SoLoud
 
 	BusInstance::~BusInstance()
 	{
-		Soloud *s = mParent->mSoloud;
-		int i;
-		for (i = 0; i < (signed)s->mHighestVoice; i++)
+		if (mParent->mInstance != this)
+			return;
+		// Handle 0 is the main bus; a bus that never found its handle has no voices of its own.
+		if (mParent->mChannelHandle)
 		{
-			if (s->mVoice[i] && s->mVoice[i]->mBusHandle == mParent->mChannelHandle)
+			Soloud *s = mSoloud;
+			int i;
+			for (i = 0; i < (signed)s->mHighestVoice; i++)
 			{
-				s->stopVoice_internal(i);
+				if (s->mVoice[i] && s->mVoice[i]->mBusHandle == mParent->mChannelHandle)
+				{
+					s->stopVoice_internal(i);
+				}
 			}
 		}
+		mParent->mInstance = 0;
+		mParent->mChannelHandle = 0;
 	}
 
 	Bus::Bus()
@@ -133,19 +142,19 @@ namespace SoLoud
 	
 	BusInstance * Bus::createInstance()
 	{
-		if (mChannelHandle)
+		// One instance per bus: playing it again, on any engine, moves it.
+		if (mInstance)
 		{
 			stop();
-			mChannelHandle = 0;
-			mInstance = 0;
 		}
+		mChannelHandle = 0;
 		mInstance = new BusInstance(this);
 		return mInstance;
 	}
 
 	void Bus::findBusHandle()
 	{
-		if (mChannelHandle == 0)
+		if (mChannelHandle == 0 && mInstance)
 		{
 			// Find the channel the bus is playing on to calculate handle..
 			int i;
@@ -227,6 +236,8 @@ namespace SoLoud
 
 	void Bus::annexSound(handle aVoiceHandle)
 	{
+		if (!mInstance || !mSoloud)
+			return;
 		findBusHandle();
 		FOR_ALL_VOICES_PRE_EXT
 			mSoloud->mVoice[ch]->mBusHandle = mChannelHandle;
@@ -334,6 +345,8 @@ namespace SoLoud
 	{
 		int i;
 		unsigned int count = 0;
+		if (!mInstance || !mSoloud)
+			return 0;
 		findBusHandle();
 		mSoloud->lockAudioMutex_internal();
 		for (i = 0; i < VOICE_COUNT; i++)

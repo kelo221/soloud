@@ -459,6 +459,11 @@ namespace SoLoud
 		// Mix N samples * M channels. Called by other mix_ functions.
 		void mix_internal(unsigned int aSamples, unsigned int aStride);
 
+		// Gives the sound a process-wide unique ID if it has none, so its voices can be found on any engine.
+		static void assignAudioSourceID_internal(AudioSource &aSound);
+		// Stops the sound on every live engine. Must not be called with an audio mutex held.
+		static void stopAudioSourceOnAllEngines_internal(AudioSource &aSound);
+
 		// Handle rest of initialization (called from backend)
 		void postinit_internal(unsigned int aSamplerate, unsigned int aBufferSize, unsigned int aFlags, unsigned int aChannels);
 
@@ -540,8 +545,8 @@ namespace SoLoud
 		float mPostClipScaler;
 		// Current play index. Used to create audio handles.
 		unsigned int mPlayIndex;
-		// Current sound source index. Used to create sound source IDs.
-		unsigned int mAudioSourceID;
+		// Next engine in the process-wide list of live engines.
+		Soloud *mNextEngine;
 		// Fader for the global volume.
 		Fader mGlobalVolumeFader;
 		// Global stream time, for the global volume fader.

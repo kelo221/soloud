@@ -34,12 +34,13 @@ namespace SoLoud
 		if (aSound.mFlags & AudioSource::SINGLE_INSTANCE)
 		{
 			// Only one instance allowed, stop others
-			aSound.stop();
+			stopAudioSource(aSound);
 		}
 
 		// Creation of an audio instance may take significant amount of time,
 		// so let's not do it inside the audio thread mutex.
 		aSound.mSoloud = this;
+		assignAudioSourceID_internal(aSound);
 		SoLoud::AudioSourceInstance *instance = aSound.createInstance();
 
 		lockAudioMutex_internal();
@@ -49,11 +50,6 @@ namespace SoLoud
 			unlockAudioMutex_internal();
 			delete instance;
 			return 0; // the invalid handle; UNKNOWN_ERROR would decode as voice 6
-		}
-		if (!aSound.mAudioSourceID)
-		{
-			aSound.mAudioSourceID = mAudioSourceID;
-			mAudioSourceID++;
 		}
 		mVoice[ch] = instance;
 		mVoice[ch]->mAudioSourceID = aSound.mAudioSourceID;

@@ -35,6 +35,8 @@ namespace SoLoud
 	{
 	public:
 		Bus *mParent;
+		// The engine this instance plays on; the bus may be played on another engine later.
+		Soloud *mSoloud;
 		unsigned int mScratchSize;
 		AlignedFloatBuffer mScratch;
 

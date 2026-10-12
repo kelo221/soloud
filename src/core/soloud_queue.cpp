@@ -64,6 +64,11 @@ namespace SoLoud
 
 	QueueInstance::~QueueInstance()
 	{
+		if (mParent->mInstance == this)
+		{
+			mParent->mInstance = 0;
+			mParent->mQueueHandle = 0;
+		}
 	}
 
 	Queue::Queue()
@@ -83,8 +88,8 @@ namespace SoLoud
 		if (mInstance)
 		{
 			stop();
-			mInstance = 0;
 		}
+		mQueueHandle = 0;
 		mInstance = new QueueInstance(this);
 		return mInstance;
 	}
@@ -92,6 +97,8 @@ namespace SoLoud
 	void Queue::findQueueHandle()
 	{
 		// Find the channel the queue is playing on to calculate handle..
+		if (!mInstance)
+			return;
 		int i;
 		for (i = 0; mQueueHandle == 0 && i < (signed)mSoloud->mHighestVoice; i++)
 		{
@@ -104,7 +111,7 @@ namespace SoLoud
 
 	result Queue::play(AudioSource &aSound)
 	{
-		if (!mSoloud)
+		if (!mInstance || !mSoloud)
 		{
 			return INVALID_PARAMETER;
 		}
@@ -117,11 +124,7 @@ namespace SoLoud
 		if (mCount >= SOLOUD_QUEUE_MAX)
 			return OUT_OF_MEMORY;
 
-		if (!aSound.mAudioSourceID)
-		{
-			aSound.mAudioSourceID = mSoloud->mAudioSourceID;
-			mSoloud->mAudioSourceID++;
-		}
+		Soloud::assignAudioSourceID_internal(aSound);
 
 		SoLoud::AudioSourceInstance *instance = aSound.createInstance();
 
@@ -144,9 +147,10 @@ namespace SoLoud
 
 	unsigned int Queue::getQueueCount()
 	{
-		if (!mSoloud)
+		// Without an instance no audio thread reads the queue.
+		if (!mInstance || !mSoloud)
 		{
-			return 0;
+			return mCount;
 		}
 		unsigned int count;
 		mSoloud->lockAudioMutex_internal();
@@ -157,7 +161,7 @@ namespace SoLoud
 
 	bool Queue::isCurrentlyPlaying(AudioSource &aSound)
 	{
-		if (mSoloud == 0 || mCount == 0 || aSound.mAudioSourceID == 0)
+		if (!mInstance || !mSoloud || mCount == 0 || aSound.mAudioSourceID == 0)
 			return false;
 		mSoloud->lockAudioMutex_internal();
 		bool res = mSource[mReadIndex]->mAudioSourceID == aSound.mAudioSourceID;
