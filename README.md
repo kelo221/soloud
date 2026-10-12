@@ -29,7 +29,10 @@ requests are still open there.
 | Crash when playing or stopping voices before `init`, or after a failed `init`; memory leak when re-initializing. | [#404], [#324], [PR #345] | [@nuclear868], [@Calorado], [@valid-ptr] |
 | More than 255 active voices hit an assert (a breakpoint even in MSVC release builds) or overran the stack, although `setMaxActiveVoiceCount` accepts up to 1023. | — | |
 | Heap overflow and crashes on files with more than 8 channels or huge frame counts, and on Ogg files whose length reads as 0. | [#401], [#317] | [@oneafter], [@klein-j] |
+| Infinite loop in the mixer when a voice's speed (including a large Doppler shift) needs 512 or more source frames per output frame. Such a voice is now silent until its speed drops. | [#343] | [@AniCator] |
 | A voice playing at (nearly) zero speed mixed in leftover audio from the previous voice. | found while checking [#343] | [@AniCator] |
+| Out-of-bounds access when every voice was protected (`play` returned an error code that decodes as a real voice) and for handles whose slot field is 0 or above the voice limit. `play` now returns 0 when no voice is free. | — | |
+| `Wav::loadRawWave*` accepted more than 8 channels (overflowing the mixer's buffers), data shorter than one frame, and a NaN sample rate. | — | |
 | Copying a `Wav` or `WavStream` double-freed its data. They are now non-copyable. | [PR #375] | [@yig] |
 
 ### Wrong behavior
@@ -38,6 +41,8 @@ requests are still open there.
 |---|---|---|
 | Protected voices could still be made inactive. | [#298] | [@klein-j] |
 | `play3d` into a reused voice slot inherited the previous voice's 3D flags, giving it the wrong volume. | [#361] | [@petrihakkinen] |
+| On mono and stereo sources played in stereo (the SSE path), a volume or pan change overshot its target in the last 1 to 3 frames of a mix whose length is not a multiple of 4 (by up to a third for a 6-frame mix). | — | |
+| Mixing 5.1 or 7.1 sources to 4 speakers added the center and LFE channels without the voice's volume, so a muted or hard-panned voice still played them. 4-channel sources on 7.1 used the side speakers' volumes for the rear pair. | — | |
 
 ### Multiple engines in one process
 
@@ -59,7 +64,7 @@ requests are still open there.
 Known upstream problems this fork has not fixed: playback position drift when
 the source and output sample rates differ ([#314]), slow and unreliable seeking
 in non-Ogg streams ([#396], [#156]), and an assert during shutdown
-([#307], [#241]). The infinite loop reported in [#343] could not be reproduced.
+([#307], [#241]).
 
 ## Building
 
