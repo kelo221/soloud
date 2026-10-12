@@ -53,6 +53,10 @@ namespace SoLoud
 		result loadmp3(MemoryFile *aReader);
 		result loadflac(MemoryFile *aReader);
 		result testAndLoadFile(MemoryFile *aReader);
+
+		// Owns mData; an implicit copy would double-free it. Not implemented.
+		Wav(const Wav &);
+		Wav &operator=(const Wav &);
 	public:
 		float *mData;
 		unsigned int mSampleCount;

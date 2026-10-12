@@ -82,6 +82,11 @@ namespace SoLoud
 		result loadogg(File *fp);
 		result loadflac(File *fp);
 		result loadmp3(File *fp);
+
+		// Owns mFilename and mMemFile; an implicit copy would double-free them.
+		// Not implemented.
+		WavStream(const WavStream &);
+		WavStream &operator=(const WavStream &);
 	public:
 		int mFiletype;
 		char *mFilename;
