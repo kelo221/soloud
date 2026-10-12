@@ -45,11 +45,13 @@ namespace SoLoud
 #define MA_NO_MP3
 #include "miniaudio.h"
 #include <math.h>
+#include <stdlib.h>
 
 namespace SoLoud
 {
-    ma_device gDevice;
-
+    // Each engine owns its device through Soloud::mBackendData; a shared
+    // device would be re-initialized by a second engine and stopped for every
+    // engine when any one of them deinits.
     void soloud_miniaudio_audiomixer(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
     {
         SoLoud::Soloud *soloud = (SoLoud::Soloud *)pDevice->pUserData;
@@ -58,7 +60,12 @@ namespace SoLoud
 
     static void soloud_miniaudio_deinit(SoLoud::Soloud *aSoloud)
     {
-        ma_device_uninit(&gDevice);
+        ma_device *device = (ma_device *)aSoloud->mBackendData;
+        if (!device)
+            return;
+        ma_device_uninit(device);
+        free(device);
+        aSoloud->mBackendData = NULL;
     }
 
     result miniaudio_init(SoLoud::Soloud *aSoloud, unsigned int aFlags, unsigned int aSamplerate, unsigned int aBuffer, unsigned int aChannels)
@@ -71,16 +78,22 @@ namespace SoLoud
         config.dataCallback       = soloud_miniaudio_audiomixer;
         config.pUserData          = (void *)aSoloud;
 
-        if (ma_device_init(NULL, &config, &gDevice) != MA_SUCCESS)
+        ma_device *device = (ma_device *)calloc(1, sizeof(ma_device));
+        if (!device)
+            return OUT_OF_MEMORY;
+
+        if (ma_device_init(NULL, &config, device) != MA_SUCCESS)
         {
+            free(device);
             return UNKNOWN_ERROR;
         }
 
-        aSoloud->postinit_internal(gDevice.sampleRate, gDevice.playback.internalPeriodSizeInFrames, aFlags, gDevice.playback.channels);
+        aSoloud->mBackendData = device;
+        aSoloud->postinit_internal(device->sampleRate, device->playback.internalPeriodSizeInFrames, aFlags, device->playback.channels);
 
         aSoloud->mBackendCleanupFunc = soloud_miniaudio_deinit;
 
-        ma_device_start(&gDevice);
+        ma_device_start(device);
         aSoloud->mBackendString = "MiniAudio";
         return 0;
     }
