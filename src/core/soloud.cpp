@@ -2007,6 +2007,8 @@ namespace SoLoud
 			// ate all our active voice slots.
 			// This is a potentially an error situation, but we have no way to report
 			// error from here. And asserting could be bad, too.
+			// The active voices still need resample buffers before they are mixed.
+			mapResampleBuffers_internal();
 			return;
 		}
 
