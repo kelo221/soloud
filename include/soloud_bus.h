@@ -39,6 +39,9 @@ namespace SoLoud
 		Soloud *mSoloud;
 		unsigned int mScratchSize;
 		AlignedFloatBuffer mScratch;
+		// One block of the bus's mix, for calls whose stride is not
+		// SAMPLE_GRANULARITY (seeking discards audio in larger passes).
+		AlignedFloatBuffer mBlock;
 
 		// Approximate volume for channels.
 		float mVisualizationChannelVolume[MAX_CHANNELS];
