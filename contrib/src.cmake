@@ -109,6 +109,10 @@ set (AUDIOSOURCES_SOURCES
 	${AUDIOSOURCES_PATH}/speech/soloud_speech.cpp
 	${AUDIOSOURCES_PATH}/speech/tts.cpp
 	${AUDIOSOURCES_PATH}/speech/tts.h
+)
+set_source_files_properties (${AUDIOSOURCES_PATH}/speech/Elements.def PROPERTIES HEADER_FILE_ONLY TRUE)
+set (AUDIOSOURCES_SOURCES
+	${AUDIOSOURCES_SOURCES}
 
 	# tedsid
 	${AUDIOSOURCES_PATH}/tedsid/sid.cpp

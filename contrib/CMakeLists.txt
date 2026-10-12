@@ -1,4 +1,7 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.5)
+if (POLICY CMP0091)
+	cmake_policy (SET CMP0091 NEW)
+endif ()
 
 project (SoLoud)
 
@@ -20,6 +23,7 @@ if (UNIX AND NOT WIN32 AND NOT APPLE)
 endif ()
 if (MSVC)
 	add_definitions (-D_CRT_SECURE_NO_WARNINGS)
+	set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 if (NOT DEFINED LIB_POSTFIX)
 	set (LIB_POSTFIX "")
