@@ -145,7 +145,8 @@ namespace SoLoud
 			s.mX2 = x;
 		}
 		// If we skipped a sample earlier, patch it by just copying the previous.
-		if (osamples != aSamples)
+		// A single sample has no previous one and is left dry.
+		if (osamples != aSamples && c > 0)
 			aBuffer[c] = aBuffer[c - 1];
 	}
 
