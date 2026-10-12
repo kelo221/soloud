@@ -183,6 +183,8 @@ namespace SoLoud
 		unsigned int mSrcOffset;
 		// Samples left over from earlier pass
 		unsigned int mLeftoverSamples;
+		// Source samples read into the newest resample block; the rest of the block is silence
+		unsigned int mBlockSamples;
 		// Number of samples to delay streaming
 		unsigned int mDelaySamples;
 		// When looping, start playing from this time

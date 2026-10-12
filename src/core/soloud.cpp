@@ -1053,6 +1053,20 @@ namespace SoLoud
 
 
 
+	// Whether a voice has played all of its sound and can be stopped. The source
+	// reports its end as soon as the last block is read, but a mix call may end
+	// before that block has been played; the resamplers also lag the playhead
+	// by up to two samples (catmull-rom). A voice that cannot advance stops as
+	// soon as its source ends.
+	static bool voiceHasFinished(AudioSourceInstance *aVoice, int aStepFixed)
+	{
+		if (aVoice->mFlags & (AudioSourceInstance::LOOPING | AudioSourceInstance::DISABLE_AUTOSTOP))
+			return false;
+		if (!aVoice->hasEnded())
+			return false;
+		return aStepFixed == 0 || aVoice->mSrcOffset >= (aVoice->mBlockSamples + 2) * FIXPOINT_FRAC_MUL;
+	}
+
 	void panAndExpand(AudioSourceInstance *aVoice, float *aBuffer, unsigned int aSamplesToRead, unsigned int aBufferSize, float *aScratch, unsigned int aChannels)
 	{
 #ifdef SOLOUD_SSE_INTRINSICS
@@ -1686,6 +1700,7 @@ namespace SoLoud
 								}
 							}
 						}
+						voice->mBlockSamples = readcount;
 
                         // Clear remaining of the resample data if the full scratch wasn't used
 						if (readcount < SAMPLE_GRANULARITY)
@@ -1814,7 +1829,7 @@ namespace SoLoud
 				panAndExpand(voice, aBuffer, aSamplesToRead, aBufferSize, aScratch, aChannels);
 
 				// clear voice if the sound is over
-				if (!(voice->mFlags & (AudioSourceInstance::LOOPING | AudioSourceInstance::DISABLE_AUTOSTOP)) && voice->hasEnded())
+				if (voiceHasFinished(voice, step_fixed))
 				{
 					stopVoice_internal(mActiveVoice[i]);
 				}
@@ -1874,6 +1889,7 @@ namespace SoLoud
 								}
 							}
 						}
+						voice->mBlockSamples = readcount;
 
 						// If we go past zero, crop to zero (a bit of a kludge)
 						if (voice->mSrcOffset < SAMPLE_GRANULARITY * FIXPOINT_FRAC_MUL)
@@ -1925,7 +1941,7 @@ namespace SoLoud
 				}
 
 				// clear voice if the sound is over
-				if (!(voice->mFlags & (AudioSourceInstance::LOOPING | AudioSourceInstance::DISABLE_AUTOSTOP)) && voice->hasEnded())
+				if (voiceHasFinished(voice, step_fixed))
 				{
 					stopVoice_internal(mActiveVoice[i]);
 				}
