@@ -43,6 +43,8 @@ requests are still open there.
 | `play3d` into a reused voice slot inherited the previous voice's 3D flags, giving it the wrong volume. | [#361] | [@petrihakkinen] |
 | On mono and stereo sources played in stereo (the SSE path), a volume or pan change overshot its target in the last 1 to 3 frames of a mix whose length is not a multiple of 4 (by up to a third for a 6-frame mix). | — | |
 | Mixing 5.1 or 7.1 sources to 4 speakers added the center and LFE channels without the voice's volume, so a muted or hard-panned voice still played them. 4-channel sources on 7.1 used the side speakers' volumes for the rear pair. | — | |
+| Calling `setProtectVoice` did not take effect until something else (a play, stop, pause or volume change) recomputed the active voices, so a newly protected voice could stay silent. | — | |
+| The end of a sound was cut off, with a click, whenever a mix call ended partway through its last 512-frame block: with device buffers that are not a multiple of 512 frames (WASAPI's usually are not) or with any resampling. Up to one block of the source was lost, for example 600 frames of a 1000-frame sound at speed 0.73 in 256-frame calls. | — | |
 
 ### Multiple engines in one process
 
