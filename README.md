@@ -52,6 +52,9 @@ requests are still open there.
 |---|---|
 | CoreAudio (macOS): every engine shared one audio queue, so deinitializing one engine silenced all the others. | Simon Bauer |
 | MiniAudio: every engine shared one device, so starting a second engine broke the first, and deinitializing any engine stopped them all. | |
+| A sound kept a pointer to the last engine it played on, so stopping or destroying it after that engine was destroyed used freed memory and hung or crashed. Buses and queues used after their engine was destroyed did the same. Sounds are now stopped on every live engine and never touch a destroyed one. | |
+| A sound played on several engines was stopped on only one, so destroying it left the other engines playing freed samples. | |
+| Sounds first played on different engines could get the same ID, so stopping one also stopped the other. | |
 
 ### Build
 
