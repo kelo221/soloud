@@ -63,6 +63,13 @@ namespace SoLoud
 		mAttenuator = aSource.mAttenuator;
 		m3dVolume = 1.0f;
 		mDopplerValue = 1.0f;
+		// The slot may be reused; don't keep the previous voice's flags until
+		// the next update3dAudio copies the instance flags.
+		mFlags = 0;
+		if (aSource.mFlags & AudioSource::LISTENER_RELATIVE)
+			mFlags |= AudioSourceInstance::LISTENER_RELATIVE;
+		if (aSource.mFlags & AudioSource::PROCESS_3D)
+			mFlags |= AudioSourceInstance::PROCESS_3D;
 	}
 
 	AudioSourceInstance::AudioSourceInstance()
