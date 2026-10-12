@@ -45,7 +45,9 @@ namespace SoLoud
 			int readcount = mParent->mSource[mParent->mReadIndex]->getAudio(aBuffer + copyofs, copycount, aBufferSize);
 			copyofs += readcount;
 			copycount -= readcount;
-			if (mParent->mSource[mParent->mReadIndex]->hasEnded())
+			// A source that gives no audio without ending (a looping sound at its
+			// end: nothing rewinds queued sources) would never be left.
+			if (readcount == 0 || mParent->mSource[mParent->mReadIndex]->hasEnded())
 			{
 				delete mParent->mSource[mParent->mReadIndex];
 				mParent->mSource[mParent->mReadIndex] = 0;
