@@ -36,7 +36,7 @@ namespace SoLoud
 		float *mBuffer;
 		float *mTotals;
 		int mBufferLength;
-		DCRemovalFilter *mParent;
+		float mLength;
 		int mOffset;
 
 	public:

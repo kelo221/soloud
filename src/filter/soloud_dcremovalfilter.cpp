@@ -29,7 +29,7 @@ namespace SoLoud
 {
 	DCRemovalFilterInstance::DCRemovalFilterInstance(DCRemovalFilter *aParent)
 	{
-		mParent = aParent;
+		mLength = aParent->mLength;
 		mBuffer = 0;
 		mBufferLength = 0;
 		mTotals = 0;
@@ -44,7 +44,7 @@ namespace SoLoud
 
 		if (mBuffer == 0)
 		{
-			mBufferLength = (int)ceil(mParent->mLength * aSamplerate);
+			mBufferLength = (int)ceil(mLength * aSamplerate);
 			mBuffer = new float[mBufferLength * aChannels];
 			mTotals = new float[aChannels];
 			unsigned int i;
