@@ -517,6 +517,9 @@ namespace SoLoud
 		unsigned int mScratchSize;
 		// Output scratch buffer, used in mix_().
 		AlignedFloatBuffer mOutputScratch;
+		// Discard buffer for loop seeks while mixing; mScratch then holds the
+		// voice's resampled frames.
+		AlignedFloatBuffer mSeekScratch;
 		// Pointers to resampler buffers, two per active voice.
 		float **mResampleData;
 		// Actual allocated memory for resampler buffers

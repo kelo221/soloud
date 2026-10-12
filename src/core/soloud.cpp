@@ -632,6 +632,7 @@ namespace SoLoud
 		if (mScratchSize < 4096) mScratchSize = 4096;
 		mScratch.init(mScratchSize * MAX_CHANNELS);
 		mOutputScratch.init(mScratchSize * MAX_CHANNELS);
+		mSeekScratch.init(SAMPLE_GRANULARITY * MAX_CHANNELS);
 		// Re-init, or setMaxActiveVoiceCount before init, already allocated these.
 		delete[] mResampleData;
 		delete[] mResampleDataOwner;
@@ -1725,7 +1726,7 @@ namespace SoLoud
 							{
 								if (voice->mFlags & AudioSourceInstance::LOOPING)
 								{
-									while (readcount < SAMPLE_GRANULARITY && voice->seek(voice->mLoopPoint, mScratch.mData, mScratchSize) == SO_NO_ERROR)
+									while (readcount < SAMPLE_GRANULARITY && voice->seek(voice->mLoopPoint, mSeekScratch.mData, SAMPLE_GRANULARITY * MAX_CHANNELS) == SO_NO_ERROR)
 									{
 										voice->mLoopCount++;
 										int inc = voice->getAudio(voice->mResampleData[0] + readcount, SAMPLE_GRANULARITY - readcount, SAMPLE_GRANULARITY);
@@ -1916,7 +1917,7 @@ namespace SoLoud
 							{
 								if (voice->mFlags & AudioSourceInstance::LOOPING)
 								{
-									while (readcount < SAMPLE_GRANULARITY && voice->seek(voice->mLoopPoint, mScratch.mData, mScratchSize) == SO_NO_ERROR)
+									while (readcount < SAMPLE_GRANULARITY && voice->seek(voice->mLoopPoint, mSeekScratch.mData, SAMPLE_GRANULARITY * MAX_CHANNELS) == SO_NO_ERROR)
 									{
 										voice->mLoopCount++;
 										readcount += voice->getAudio(voice->mResampleData[0] + readcount, SAMPLE_GRANULARITY - readcount, SAMPLE_GRANULARITY);
