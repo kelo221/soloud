@@ -38,7 +38,13 @@ namespace SoLoud
 	{
 		mDirty = 0;
 
-		float omega = (float)((2.0f * M_PI * mParam[FREQUENCY]) / mSamplerate);
+		// The filter runs at the rate of what it filters, which for a voice
+		// falls with its speed. At or above that rate's Nyquist frequency the
+		// poles leave the unit circle and the output grows without bound.
+		float frequency = mParam[FREQUENCY];
+		if (!(frequency < mSamplerate * 0.49f))
+			frequency = mSamplerate * 0.49f;
+		float omega = (float)((2.0f * M_PI * frequency) / mSamplerate);
 		float sin_omega = (float)sin(omega);
 		float cos_omega = (float)cos(omega);
 		float alpha = sin_omega / (2.0f * mParam[RESONANCE]);
