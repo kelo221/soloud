@@ -473,6 +473,9 @@ namespace SoLoud
 		mParam[DAMP] = aParent->mDamp;
 		mParam[WIDTH] = aParent->mWidth;
 		mParam[WET] = 1;
+		// The model starts with its own defaults; apply the settings at the
+		// first filter call.
+		mParamChanged = (1 << 5) - 1;
 	}
 
 	void FreeverbFilterInstance::filter(float* aBuffer, unsigned int aSamples, unsigned int aBufferSize, unsigned int aChannels, float aSamplerate, time aTime)
