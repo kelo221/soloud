@@ -177,6 +177,8 @@ namespace SoLoud
 			{
 				mVoice[ch]->mFlags |= AudioSourceInstance::INAUDIBLE_KILL;
 			}
+			// Ticking voices are must-live candidates for the active set.
+			mActiveVoiceDirty = true;
 		FOR_ALL_VOICES_POST
 	}
 
