@@ -45,6 +45,7 @@ requests are still open there.
 | `Soloud::seek` on a bus hit an assert (a breakpoint even in MSVC release builds) or crashed in the SSE pan code for most seek lengths, and overran the bus's buffer for voices with more channels than the bus. | — | |
 | `Soloud::seek` on a bus right after a voice was stopped and another played into its slot wrote through a null pointer. | — | |
 | `Bus::getApproximateVolume` read past its array for channel 8 of an 8-channel bus. | — | |
+| A `Queue` holding a looping sound hung the audio thread, holding the engine's mutex, once that sound had played to its end. A queued sound that gives no more audio is now dropped. | — | |
 
 ### Wrong behavior
 
@@ -66,6 +67,7 @@ requests are still open there.
 | `FlangerFilter` advanced its sweep once per channel per frame, so the channels of a stereo sound were swept differently and twice as fast as set. | — | |
 | On Windows, `M_PI` was defined with only 12 digits (MSVC does not define it), so panning, filters, 3D audio and generators differed slightly from other platforms, and a hard-panned voice leaked about -240 dB into the other side. | — | |
 | The end of a sound was cut off, with a click, whenever a mix call ended partway through its last 512-frame block: with device buffers that are not a multiple of 512 frames (WASAPI's usually are not) or with any resampling. Up to one block of the source was lost, for example 600 frames of a 1000-frame sound at speed 0.73 in 256-frame calls. | — | |
+| A sound queued in a `Queue` with fewer channels than the queue played the previous sound's audio on the queue's other channels. They are now silent. | — | |
 
 ### Multiple engines in one process
 
