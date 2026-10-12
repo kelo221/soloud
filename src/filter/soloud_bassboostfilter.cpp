@@ -49,7 +49,7 @@ namespace SoLoud
 
 	result BassboostFilter::setParams(float aBoost)
 	{
-		if (aBoost < 0)
+		if (!(aBoost >= 0))
 			return INVALID_PARAMETER;
 		mBoost = aBoost;
 		return SO_NO_ERROR;

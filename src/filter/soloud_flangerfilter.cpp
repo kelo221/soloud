@@ -100,7 +100,7 @@ namespace SoLoud
 
 	result FlangerFilter::setParams(float aDelay, float aFreq)
 	{
-		if (aDelay <= 0 || aFreq <= 0)
+		if (!(aDelay > 0 && aFreq > 0))
 			return INVALID_PARAMETER;
 
 		mDelay = aDelay;

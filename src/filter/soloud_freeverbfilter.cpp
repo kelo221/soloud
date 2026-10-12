@@ -511,7 +511,7 @@ namespace SoLoud
 
 	result FreeverbFilter::setParams(float aFreeze, float aRoomSize, float aDamp, float aWidth)
 	{
-		if (aFreeze < 0 || aFreeze > 1 || aRoomSize <= 0 || aDamp < 0 || aWidth <= 0)
+		if (!(aFreeze >= 0 && aFreeze <= 1 && aRoomSize > 0 && aDamp >= 0 && aWidth > 0))
 			return INVALID_PARAMETER;
 
 		mMode = aFreeze;
