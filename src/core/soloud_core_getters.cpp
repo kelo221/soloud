@@ -68,6 +68,9 @@ namespace SoLoud
 
 		int ch = (aVoiceHandle & 0xfff) - 1;
 		unsigned int idx = aVoiceHandle >> 12;
+		// The slot field holds 0..4095; only 1..VOICE_COUNT name a voice.
+		if (ch < 0 || ch >= VOICE_COUNT)
+			return -1;
 		if (mVoice[ch] &&
 			(mVoice[ch]->mPlayIndex & 0xfffff) == idx)
 		{
@@ -333,6 +336,9 @@ namespace SoLoud
 				lowest_play_index = i;
 			}
 		}
+		// Every voice is protected: there is nothing to steal.
+		if (lowest_play_index == -1)
+			return -1;
 		stopVoice_internal(lowest_play_index);
 		return lowest_play_index;
 	}

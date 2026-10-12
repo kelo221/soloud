@@ -48,7 +48,7 @@ namespace SoLoud
 		{
 			unlockAudioMutex_internal();
 			delete instance;
-			return UNKNOWN_ERROR;
+			return 0; // the invalid handle; UNKNOWN_ERROR would decode as voice 6
 		}
 		if (!aSound.mAudioSourceID)
 		{
