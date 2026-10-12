@@ -51,7 +51,10 @@ namespace SoLoud
 		for (i = 0; i < aSamples; i++)
 		{
 			float dry = aBuffer[i];
-			float wet = (1 + k) * aBuffer[i] / (1 + k * (float)fabs(aBuffer[i]));
+			// With a negative amount the curve has a pole at |x| = -1 / k (at 1
+			// for amount -1, where it is 0 / 0); past it the output is 0.
+			float denominator = 1 + k * (float)fabs(aBuffer[i]);
+			float wet = denominator > 0 ? (1 + k) * aBuffer[i] / denominator : 0;
 			aBuffer[i] += (wet - dry) * mParam[WaveShaperFilter::WET];
 		}
 	}
