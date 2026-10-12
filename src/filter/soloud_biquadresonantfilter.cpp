@@ -161,7 +161,7 @@ namespace SoLoud
 
 	result BiquadResonantFilter::setParams(int aType, float aFrequency, float aResonance)
 	{
-		if (aType < 0 || aType > 3 || aFrequency <= 0 || aResonance <= 0)
+		if (aType < 0 || aType > 3 || !(aFrequency > 0) || !(aResonance > 0))
 			return INVALID_PARAMETER;
 
 		mFilterType = aType;

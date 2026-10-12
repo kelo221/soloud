@@ -65,7 +65,7 @@ namespace SoLoud
 
 	result WaveShaperFilter::setParams(float aAmount)
 	{
-		if (aAmount < -1 || aAmount > 1)
+		if (!(aAmount >= -1 && aAmount <= 1))
 			return INVALID_PARAMETER;
 		mAmount = aAmount;
 		return 0;

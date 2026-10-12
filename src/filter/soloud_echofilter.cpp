@@ -98,7 +98,7 @@ namespace SoLoud
 
 	result EchoFilter::setParams(float aDelay, float aDecay, float aFilter)
 	{
-		if (aDelay <= 0 || aDecay <= 0 || aFilter < 0 || aFilter >= 1.0f)
+		if (!(aDelay > 0) || !(aDecay > 0) || !(aFilter >= 0 && aFilter < 1.0f))
 			return INVALID_PARAMETER;
 
 		mDecay = aDecay;

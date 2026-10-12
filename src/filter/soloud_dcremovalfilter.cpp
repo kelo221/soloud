@@ -97,7 +97,7 @@ namespace SoLoud
 
 	result DCRemovalFilter::setParams(float aLength)
 	{
-		if (aLength <= 0)
+		if (!(aLength > 0))
 			return INVALID_PARAMETER;
 
         mLength = aLength;

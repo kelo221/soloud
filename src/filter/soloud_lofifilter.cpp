@@ -77,7 +77,7 @@ namespace SoLoud
 
 	result LofiFilter::setParams(float aSampleRate, float aBitdepth)
 	{
-		if (aSampleRate <= 0 || aBitdepth <= 0)
+		if (!(aSampleRate > 0) || !(aBitdepth > 0))
 			return INVALID_PARAMETER;
 
 		mSampleRate = aSampleRate;
