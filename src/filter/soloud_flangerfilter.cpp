@@ -60,8 +60,11 @@ namespace SoLoud
 		unsigned int i, j;
 		int maxsamples = (int)ceil(mParam[FlangerFilter::DELAY] * aSamplerate);
 		double inc = mParam[FlangerFilter::FREQ] * M_PI * 2 / aSamplerate;
+		// Every channel follows the same LFO, which advances once per frame.
+		double index = mIndex;
 		for (i = 0; i < aChannels; i++)
 		{
+			mIndex = index;
 			int mbofs = i * mBufferLength;
 			int abofs = i * aBufferSize;
 			for (j = 0; j < aSamples; j++, abofs++)
