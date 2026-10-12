@@ -350,7 +350,7 @@ namespace SoLoud
 
 	float Bus::getApproximateVolume(unsigned int aChannel)
 	{
-		if (aChannel > mChannels)
+		if (aChannel >= mChannels)
 			return 0;
 		float vol = 0;
 		if (mInstance && mSoloud)
