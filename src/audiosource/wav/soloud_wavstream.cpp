@@ -422,6 +422,16 @@ namespace SoLoud
 	
 #define MAKEDWORD(a,b,c,d) (((d) << 24) | ((c) << 16) | ((b) << 8) | (a))
 
+	// The FLAC/MP3/WAV paths of getAudio decode into a 512 * MAX_CHANNELS block
+	// using the decoder's channel count, so more channels would overflow it, and
+	// the frame count must fit mSampleCount (upstream #401).
+	static bool validStreamLayout(unsigned long long aFrames, unsigned int aChannels, unsigned int aSamplerate)
+	{
+		return aChannels > 0 && aChannels <= MAX_CHANNELS &&
+			aSamplerate > 0 &&
+			aFrames <= 0xffffffffull;
+	}
+
 	result WavStream::loadwav(File * fp)
 	{
 		fp->seek(0);
@@ -429,6 +439,12 @@ namespace SoLoud
 
 		if (!drwav_init(&decoder, drwav_read_func, drwav_seek_func, (void*)fp, NULL))
 			return FILE_LOAD_FAILED;
+
+		if (!validStreamLayout(decoder.totalPCMFrameCount, decoder.channels, decoder.sampleRate))
+		{
+			drwav_uninit(&decoder);
+			return FILE_LOAD_FAILED;
+		}
 
 		mChannels = decoder.channels;
 		if (mChannels > MAX_CHANNELS)
@@ -453,13 +469,20 @@ namespace SoLoud
 		if (v == NULL)
 			return FILE_LOAD_FAILED;
 		stb_vorbis_info info = stb_vorbis_get_info(v);
+		// Ogg decodes into per-channel arrays, so extra channels are dropped
+		// rather than rejected; a length of 0 means it could not be determined.
+		unsigned int samples = stb_vorbis_stream_length_in_samples(v);
+		if (info.channels <= 0 || info.sample_rate == 0 || samples == 0)
+		{
+			stb_vorbis_close(v);
+			return FILE_LOAD_FAILED;
+		}
 		mChannels = info.channels;
 		if (info.channels > MAX_CHANNELS)
 		{
 			mChannels = MAX_CHANNELS;
 		}
 		mBaseSamplerate = (float)info.sample_rate;
-		int samples = stb_vorbis_stream_length_in_samples(v);
 		stb_vorbis_close(v);
 		mFiletype = WAVSTREAM_OGG;
 
@@ -475,6 +498,12 @@ namespace SoLoud
 
 		if (decoder == NULL)
 			return FILE_LOAD_FAILED;
+
+		if (!validStreamLayout(decoder->totalPCMFrameCount, decoder->channels, decoder->sampleRate))
+		{
+			drflac_close(decoder);
+			return FILE_LOAD_FAILED;
+		}
 		
 		mChannels = decoder->channels;
 		if (mChannels > MAX_CHANNELS)
@@ -498,13 +527,18 @@ namespace SoLoud
 			return FILE_LOAD_FAILED;
 
 
+		drmp3_uint64 samples = drmp3_get_pcm_frame_count(&decoder);
+		if (!validStreamLayout(samples, decoder.channels, decoder.sampleRate))
+		{
+			drmp3_uninit(&decoder);
+			return FILE_LOAD_FAILED;
+		}
+
 		mChannels = decoder.channels;
 		if (mChannels > MAX_CHANNELS)
 		{
 			mChannels = MAX_CHANNELS;
 		}
-
-		drmp3_uint64 samples = drmp3_get_pcm_frame_count(&decoder);
 
 		mBaseSamplerate = (float)decoder.sampleRate;
 		mSampleCount = (unsigned int)samples;
