@@ -1671,7 +1671,11 @@ namespace SoLoud
 		for (i = 0; i < mActiveVoiceCount; i++)
 		{
 			AudioSourceInstance *voice = mVoice[mActiveVoice[i]];
+			// The active list is recomputed by mixes only, so between a play and
+			// the next mix (a bus seek) a listed slot can hold a voice that has
+			// no resample buffers yet.
 			if (voice &&
+				voice->mResampleData[0] &&
 				voice->mBusHandle == aBus &&
 				!(voice->mFlags & AudioSourceInstance::PAUSED) &&
 				!(voice->mFlags & AudioSourceInstance::INAUDIBLE))
@@ -1872,6 +1876,7 @@ namespace SoLoud
 			}
 			else
 				if (voice &&
+					voice->mResampleData[0] &&
 					voice->mBusHandle == aBus &&
 					!(voice->mFlags & AudioSourceInstance::PAUSED) &&
 					(voice->mFlags & AudioSourceInstance::INAUDIBLE) &&
