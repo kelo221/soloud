@@ -1677,9 +1677,10 @@ namespace SoLoud
 			{
 				float step = voice->mSamplerate / aSamplerate;
 				// A step of a whole block or more never fits an output frame in
-				// a block, so the loop below would not advance. Treat it, and
-				// NaN, like a stopped voice.
-				if (!(step < SAMPLE_GRANULARITY))
+				// a block, and a negative one wraps to a huge fixed-point step,
+				// so the loop below would not advance. Treat them, and NaN, like
+				// a stopped voice.
+				if (!(step >= 0 && step < SAMPLE_GRANULARITY))
 					step = 0;
 				unsigned int step_fixed = (int)floor(step * FIXPOINT_FRAC_MUL);
 				unsigned int outofs = 0;
@@ -1877,7 +1878,7 @@ namespace SoLoud
 			{
 				// Inaudible but needs ticking. Do minimal work (keep counters up to date and ask audiosource for data)
 				float step = voice->mSamplerate / aSamplerate;
-				if (!(step < SAMPLE_GRANULARITY))
+				if (!(step >= 0 && step < SAMPLE_GRANULARITY))
 					step = 0;
 				int step_fixed = (int)floor(step * FIXPOINT_FRAC_MUL);
 				unsigned int outofs = 0;
