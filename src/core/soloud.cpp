@@ -1789,6 +1789,17 @@ namespace SoLoud
 					// Move source pointer onwards (writesamples may be zero)
 					voice->mSrcOffset += writesamples * step_fixed;
 				}
+
+				// A zero step (speed near zero, or above the fixed-point range) skips
+				// the resampler; don't pan another voice's scratch data into the mix.
+				if (outofs < aSamplesToRead)
+				{
+					unsigned int k;
+					for (k = 0; k < voice->mChannels; k++)
+					{
+						memset(aScratch + k * aBufferSize + outofs, 0, sizeof(float) * (aSamplesToRead - outofs));
+					}
+				}
 				
 				// Handle panning and channel expansion (and/or shrinking)
 				panAndExpand(voice, aBuffer, aSamplesToRead, aBufferSize, aScratch, aChannels);
