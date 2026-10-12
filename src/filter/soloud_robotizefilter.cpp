@@ -42,7 +42,13 @@ namespace SoLoud
 		updateParams(aTime);
 		unsigned int i;
 		int period = (int)(aSamplerate / mParam[FREQ]);
-		int start = (int)(aTime * aSamplerate) % period;
+		// A frequency above the rate, not above 0, or so low that the period
+		// is beyond the int range (INT_MIN) has no usable period.
+		if (period < 1)
+			period = 1;
+		// The stream time in samples passes the int range after 13.5 hours
+		// at 44.1 kHz.
+		int start = (int)fmod(aTime * aSamplerate, (double)period);
 		for (i = 0; i < aSamples; i++)
 		{
 			float s = aBuffer[i];
