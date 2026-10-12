@@ -3,13 +3,17 @@
 Usage: python scripts/smoke_native_lib.py <path to soloud.dll/.so/.dylib> [--device]
 
 Always: null-driver offline mix with 300 simultaneous voices (above the old
-255 cap), checking the output is finite and not silent.
+255 cap), checking the output is finite and not silent; and sounds that
+outlive their engine or play on two engines.
 --device: two engines on the default device backend; deinit the first and
-check the second keeps advancing (per-engine backend state). Output is muted.
+check the second keeps advancing (per-engine backend state), then repeat the
+sound lifetime checks with live audio threads. Output is muted.
 """
 import ctypes
 import math
+import os
 import sys
+import threading
 import time
 
 AUTO, NULLDRIVER, CLIP_ROUNDOFF = 0, 16, 1
@@ -60,7 +64,6 @@ def null_mix(lib):
     active, voices = lib.Soloud_getActiveVoiceCount(so), lib.Soloud_getVoiceCount(so)
     assert voices == 300 and active == 300, (voices, active)
     assert peak > 0.01, peak
-    # Sources must die before their engine: ~AudioSource calls back into it.
     lib.Sfxr_destroy(sfx)
     lib.Soloud_deinit(so)
     lib.Soloud_destroy(so)
@@ -93,9 +96,43 @@ def two_engines(lib):
           f"({before:.2f}s -> {after:.2f}s)")
 
 
+def outliving_sounds(lib, backend):
+    """A sound destroyed while two engines play it, and after its engine is gone."""
+    def engine():
+        so = lib.Soloud_create()
+        rate, frames = (44100, 512) if backend == NULLDRIVER else (0, 0)
+        assert lib.Soloud_initEx(so, CLIP_ROUNDOFF, backend, rate, frames, 2) == 0
+        lib.Soloud_setGlobalVolume(so, 0.0)
+        return so
+
+    def kill(so):
+        lib.Soloud_deinit(so)
+        lib.Soloud_destroy(so)
+
+    # The old library hung here instead of crashing; fail instead of waiting.
+    watchdog = threading.Timer(20.0, lambda: (print("FAIL: sound lifetime check hung"), os._exit(1)))
+    watchdog.start()
+    a, b = engine(), engine()
+    sfx = make_sound(lib)
+    lib.Soloud_play(a, sfx)
+    lib.Soloud_play(b, sfx)
+    lib.Sfxr_destroy(sfx)
+    counts = lib.Soloud_getVoiceCount(a), lib.Soloud_getVoiceCount(b)
+    assert counts == (0, 0), f"destroyed sound still playing: {counts}"
+    sfx = make_sound(lib)
+    lib.Soloud_play(a, sfx)
+    kill(a)
+    lib.Sfxr_destroy(sfx)
+    kill(b)
+    watchdog.cancel()
+    print("sounds: stopped on both engines when destroyed; destroying one after its engine is safe")
+
+
 if __name__ == "__main__":
     library = load(sys.argv[1])
     null_mix(library)
+    outliving_sounds(library, NULLDRIVER)
     if "--device" in sys.argv[2:]:
         two_engines(library)
+        outliving_sounds(library, AUTO)
     print("OK")
