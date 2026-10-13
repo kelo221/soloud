@@ -24,6 +24,8 @@ requests are still open there.
 | Looping WAV, FLAC and MP3 streams corrupted the heap at every loop, because `WavStreamInstance::seek` ran the Ogg decoder's seek on the other decoders. | [#405], [PR #379] | [@ivanpaulovich] (report), [@pgrAm] (fix) |
 | Looping multi-channel streams wrote every channel after the first to the wrong place after a loop wrap. | [PR #379] | [@pgrAm] |
 | A looping `WavStream` reported that it had ended. | [PR #379] | [@pgrAm] |
+| Playing a `WavStream` loaded with `load` crashed when its file had been deleted or locked since loading (every voice reopens the file). Such a voice now ends at once. | — | |
+| A `WavStream` whose WAV, FLAC or MP3 data was shorter than its header claimed never ended: once the data ran out, a voice that does not loop played silence forever. It now ends where the data does. | — | |
 | Crash when more voices with the "tick when inaudible" behavior were playing than the active voice limit allows. | [#279], [#205], [#327] | [@VitorioK], [@asumagic], [@stohrendorf] |
 | Infinite loop in `AudioSourceInstance::seek` with a scratch buffer smaller than one frame. | [#392] | [@klein-j] |
 | Crash when playing or stopping voices before `init`, or after a failed `init`; memory leak when re-initializing. | [#404], [#324], [PR #345] | [@nuclear868], [@Calorado], [@valid-ptr] |
