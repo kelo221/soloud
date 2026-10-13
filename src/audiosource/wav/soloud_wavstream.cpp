@@ -416,9 +416,11 @@ namespace SoLoud
 
 	bool WavStreamInstance::hasEnded()
 	{
-		// Without a file (it could not be opened or decoded) nothing plays.
+		// Without a file (it could not be opened or decoded) nothing plays,
+		// and a looping voice would otherwise live on playing silence.
 		if (mFile == NULL)
 		{
+			mFlags &= ~AudioSourceInstance::LOOPING;
 			return 1;
 		}
 		if (!(mFlags & AudioSourceInstance::LOOPING) && mOffset >= mParent->mSampleCount)
