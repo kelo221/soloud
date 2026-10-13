@@ -1092,12 +1092,16 @@ namespace SoLoud
 	// reports its end as soon as the last block is read, but a mix call may end
 	// before that block has been played; the resamplers also lag the playhead
 	// by up to two samples (catmull-rom). A voice that cannot advance stops as
-	// soon as its source ends.
+	// soon as its source ends. The source is asked before the looping flag is
+	// checked: a stream that lost its file clears the flag in hasEnded, and a
+	// voice that cannot advance never reads a block that would ask it.
 	static bool voiceHasFinished(AudioSourceInstance *aVoice, int aStepFixed)
 	{
-		if (aVoice->mFlags & (AudioSourceInstance::LOOPING | AudioSourceInstance::DISABLE_AUTOSTOP))
+		if (aVoice->mFlags & AudioSourceInstance::DISABLE_AUTOSTOP)
 			return false;
 		if (!aVoice->hasEnded())
+			return false;
+		if (aVoice->mFlags & AudioSourceInstance::LOOPING)
 			return false;
 		return aStepFixed == 0 || aVoice->mSrcOffset >= (aVoice->mBlockSamples + 2) * FIXPOINT_FRAC_MUL;
 	}
