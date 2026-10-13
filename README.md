@@ -69,6 +69,7 @@ requests are still open there.
 | The end of a sound was cut off, with a click, whenever a mix call ended partway through its last 512-frame block: with device buffers that are not a multiple of 512 frames (WASAPI's usually are not) or with any resampling. Up to one block of the source was lost, for example 600 frames of a 1000-frame sound at speed 0.73 in 256-frame calls. | — | |
 | A sound queued in a `Queue` with fewer channels than the queue played the previous sound's audio on the queue's other channels. They are now silent. | — | |
 | `oscillateVolume`, `oscillatePan`, `oscillateRelativePlaySpeed`, `oscillateGlobalVolume` and `oscillateFilterParameter` from a higher value to a lower one oscillated above the higher value instead of between the two: a volume oscillation from 1 to 0 went up to 2. | — | |
+| Resampled voices (a sound whose sample rate differs from the engine's, or any play speed other than 1) played slightly fast: at the end of every 512-frame source block the resampler skipped up to one step of the source. A 44.1 kHz sound on a 48 kHz engine ran about 0.09% fast, 0.1 s ahead after three minutes. | [#314] | |
 
 ### Multiple engines in one process
 
@@ -90,8 +91,7 @@ requests are still open there.
 
 ### Not fixed yet
 
-Known upstream problems this fork has not fixed: playback position drift when
-the source and output sample rates differ ([#314]), slow and unreliable seeking
+Known upstream problems this fork has not fixed: slow and unreliable seeking
 in non-Ogg streams ([#396], [#156]), and an assert during shutdown
 ([#307], [#241]).
 
