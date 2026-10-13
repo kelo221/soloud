@@ -3,8 +3,13 @@ setlocal
 
 cd /d "%~dp0"
 
+rem CMake picks the newest Visual Studio unless SOLOUD_CMAKE_GENERATOR names
+rem one, for example "Visual Studio 17 2022".
+set "GENERATOR="
+if defined SOLOUD_CMAKE_GENERATOR set GENERATOR=-G "%SOLOUD_CMAKE_GENERATOR%"
+
 echo Building SoLoud Windows x64 DLL...
-cmake -S contrib -B contrib\build-win64 -G "Visual Studio 17 2022" -A x64 ^
+cmake -S contrib -B contrib\build-win64 %GENERATOR% -A x64 ^
   -DCMAKE_BUILD_TYPE=Release ^
   -DBUILD_SHARED_LIBS=ON -DSOLOUD_DYNAMIC=ON -DSOLOUD_STATIC=OFF -DSOLOUD_C_API=ON ^
   -DSOLOUD_GENERATE_GLUE=OFF -DSOLOUD_BUILD_DEMOS=OFF -DSOLOUD_BACKEND_SDL2=OFF ^

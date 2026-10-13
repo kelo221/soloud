@@ -97,6 +97,20 @@ Known upstream problems this fork has not fixed: slow and unreliable seeking
 in non-Ogg streams ([#396], [#156]), and an assert during shutdown
 ([#307], [#241]).
 
+## Prebuilt libraries
+
+GitHub Actions builds the library below for every platform on each push to
+`master` and each pull request, and tests every build: the smoke test on
+Windows, Linux (in Ubuntu 20.04) and macOS, and the 16 KiB alignment check for
+Android, which has no device to run on. Each run keeps the libraries as
+artifacts for 90 days ([Actions](https://github.com/kelo221/soloud/actions/workflows/build.yml)); pushing
+a tag that starts with `v` publishes them as a
+[release](https://github.com/kelo221/soloud/releases), one zip per platform plus `SHA256SUMS.txt`.
+
+The macOS library has an ad-hoc signature only, so macOS quarantines it when
+it comes from a browser download. Clear that before use:
+`xattr -d com.apple.quarantine libsoloud.dylib`.
+
 ## Building
 
 The CMake project in `contrib/` works as before. These scripts build the
@@ -104,7 +118,7 @@ shared library with the C API:
 
 | Platform | Command | Output | Backends |
 |---|---|---|---|
-| Windows x64 | `build_windows.bat` (Visual Studio 2022, CMake) | `bin/soloud.dll` | WASAPI, WinMM, Null |
+| Windows x64 | `build_windows.bat` (Visual Studio 2022 or newer, CMake) | `bin/soloud.dll` | WASAPI, WinMM, Null |
 | Linux x86_64 | `./build_linux.sh` (Docker) | `dist/linux-x64/libsoloud.so` | MiniAudio, Null |
 | macOS (arm64 + x86_64) | `./build_macos.sh` (Xcode tools, CMake) | `dist/macos/libsoloud.dylib` | CoreAudio, Null |
 | Android (arm64-v8a, armeabi-v7a) | `./build_android.sh` (Docker; downloads NDK r27d) | `dist/android/<abi>/libsoloud.so` | OpenSL ES, Null |
@@ -113,7 +127,9 @@ The Linux library is built in Ubuntu 20.04, so it runs on any distribution
 with glibc 2.29 or newer. The Android libraries target API level 23, link
 libc++ statically and use 16 KiB page alignment, which Android 15 devices with
 16 KiB pages need; `python scripts/elf_info.py <library>` shows a library's
-dependencies and alignment. To check a build, run
+dependencies and alignment, and `--min-align 16384` makes it fail on a
+library that is not aligned that way. `build_windows.bat` uses the newest
+Visual Studio unless `SOLOUD_CMAKE_GENERATOR` names one. To check a build, run
 `python scripts/smoke_native_lib.py <library> --device`. It mixes 300 voices
 on the null driver, and checks that a second engine keeps playing after the
 first one is shut down.

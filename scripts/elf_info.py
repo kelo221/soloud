@@ -2,7 +2,10 @@
 """Print an ELF shared library's machine, NEEDED libraries, SONAME and LOAD
 segment alignment (Android needs 16 KiB alignment for 16 KiB page devices).
 
-Usage: python scripts/elf_info.py <lib.so> [...]
+Usage: python scripts/elf_info.py [--min-align BYTES] <lib.so> [...]
+
+With --min-align, exits with status 1 if any LOAD segment of any library is
+aligned to less than BYTES (16384 for Android's 16 KiB pages).
 """
 import struct
 import sys
@@ -13,7 +16,7 @@ MACHINES = {3: "x86", 40: "arm", 62: "x86_64", 183: "aarch64"}
 def info(path):
     data = open(path, "rb").read()
     if data[:4] != b"\x7fELF":
-        return f"{path}: not an ELF file"
+        return f"{path}: not an ELF file", None
     is64 = data[4] == 2
     end = "<" if data[5] == 1 else ">"
     if is64:
@@ -64,9 +67,21 @@ def info(path):
             needed = [name(v) for t, v in entries if t == 1]
             soname = next((name(v) for t, v in entries if t == 14), None)
     return (f"{path}: {MACHINES.get(machine, machine)}, soname={soname}, "
-            f"needed={needed}, load_align={sorted(set(loads))}")
+            f"needed={needed}, load_align={sorted(set(loads))}"), loads
 
 
 if __name__ == "__main__":
-    for p in sys.argv[1:]:
-        print(info(p))
+    args = sys.argv[1:]
+    min_align = 0
+    if args[:1] == ["--min-align"]:
+        min_align, args = int(args[1]), args[2:]
+    ok = True
+    for p in args:
+        text, loads = info(p)
+        print(text)
+        if loads is None:
+            ok = False
+        elif min(loads, default=0) < min_align:
+            print(f"{p}: LOAD segments must be aligned to at least {min_align} bytes")
+            ok = False
+    sys.exit(0 if ok else 1)

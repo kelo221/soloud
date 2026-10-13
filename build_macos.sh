@@ -18,6 +18,8 @@ cmake --build "$B" -j"$(sysctl -n hw.ncpu)"
 
 mkdir -p dist/macos
 cp "$B/libsoloud.dylib" dist/macos/libsoloud.dylib
+# Ad-hoc signature on both slices (the linker signs only arm64 ones).
+codesign --force --sign - dist/macos/libsoloud.dylib
 lipo -info dist/macos/libsoloud.dylib
 otool -l dist/macos/libsoloud.dylib | grep -A4 LC_BUILD_VERSION | grep minos | sort -u
 echo "Built dist/macos/libsoloud.dylib"
