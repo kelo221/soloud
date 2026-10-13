@@ -270,6 +270,10 @@ namespace SoLoud
 					}
 				}
 				mOffset += offset;
+				// A short read is the end of the data, even when the header
+				// declared more frames (a file cut off in its data chunk).
+				if (offset < aSamplesToRead && mOffset < mParent->mSampleCount)
+					mOffset = mParent->mSampleCount;
 				return offset;
 			}
 			break;
@@ -291,6 +295,10 @@ namespace SoLoud
 					}
 				}
 				mOffset += offset;
+				// A short read is the end of the data, even when the header
+				// declared more frames (a file cut off in its data chunk).
+				if (offset < aSamplesToRead && mOffset < mParent->mSampleCount)
+					mOffset = mParent->mSampleCount;
 				return offset;
 			}
 		break;
@@ -339,6 +347,10 @@ namespace SoLoud
 					}
 				}
 				mOffset += offset;
+				// A short read is the end of the data, even when the header
+				// declared more frames (a file cut off in its data chunk).
+				if (offset < aSamplesToRead && mOffset < mParent->mSampleCount)
+					mOffset = mParent->mSampleCount;
 				return offset;
 			}
 			break;
