@@ -72,6 +72,7 @@ requests are still open there.
 | A sound queued in a `Queue` with fewer channels than the queue played the previous sound's audio on the queue's other channels. They are now silent. | — | |
 | `oscillateVolume`, `oscillatePan`, `oscillateRelativePlaySpeed`, `oscillateGlobalVolume` and `oscillateFilterParameter` from a higher value to a lower one oscillated above the higher value instead of between the two: a volume oscillation from 1 to 0 went up to 2. | — | |
 | Resampled voices (a sound whose sample rate differs from the engine's, or any play speed other than 1) played slightly fast: at the end of every 512-frame source block the resampler skipped up to one step of the source. A 44.1 kHz sound on a 48 kHz engine ran about 0.09% fast, 0.1 s ahead after three minutes. | [#314] | |
+| Some FLAC files decoded to wrong samples: dr_flac summed the linear prediction in 32 bits whenever the sample size plus the prediction shift fit in 32 bits, so a predictor that overshoots full scale wrapped around. Encoders can produce these at 20 bits and above, for example on the side channel of a stereo file. Fixed as in dr_flac 0.12.35. | [dr_libs 713ffe6] | [@mackron] |
 
 ### Multiple engines in one process
 
@@ -147,6 +148,7 @@ is maintained by [@kelo221](https://github.com/kelo221).
 [#298]: https://github.com/jarikomppa/soloud/issues/298
 [#307]: https://github.com/jarikomppa/soloud/issues/307
 [#314]: https://github.com/jarikomppa/soloud/issues/314
+[dr_libs 713ffe6]: https://github.com/mackron/dr_libs/commit/713ffe6f18
 [#317]: https://github.com/jarikomppa/soloud/issues/317
 [#324]: https://github.com/jarikomppa/soloud/issues/324
 [#327]: https://github.com/jarikomppa/soloud/issues/327
@@ -169,6 +171,7 @@ is maintained by [@kelo221](https://github.com/kelo221).
 [@oneafter]: https://github.com/oneafter
 [@petrihakkinen]: https://github.com/petrihakkinen
 [@pgrAm]: https://github.com/pgrAm
+[@mackron]: https://github.com/mackron
 [@stohrendorf]: https://github.com/stohrendorf
 [@valid-ptr]: https://github.com/valid-ptr
 [@VitorioK]: https://github.com/VitorioK
