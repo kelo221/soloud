@@ -105,9 +105,13 @@ shared library with the C API:
 | Windows x64 | `build_windows.bat` (Visual Studio 2022, CMake) | `bin/soloud.dll` | WASAPI, WinMM, Null |
 | Linux x86_64 | `./build_linux.sh` (Docker) | `dist/linux-x64/libsoloud.so` | MiniAudio, Null |
 | macOS (arm64 + x86_64) | `./build_macos.sh` (Xcode tools, CMake) | `dist/macos/libsoloud.dylib` | CoreAudio, Null |
+| Android (arm64-v8a, armeabi-v7a) | `./build_android.sh` (Docker; downloads NDK r27d) | `dist/android/<abi>/libsoloud.so` | OpenSL ES, Null |
 
 The Linux library is built in Ubuntu 20.04, so it runs on any distribution
-with glibc 2.29 or newer. To check a build, run
+with glibc 2.29 or newer. The Android libraries target API level 23, link
+libc++ statically and use 16 KiB page alignment, which Android 15 devices with
+16 KiB pages need; `python scripts/elf_info.py <library>` shows a library's
+dependencies and alignment. To check a build, run
 `python scripts/smoke_native_lib.py <library> --device`. It mixes 300 voices
 on the null driver, and checks that a second engine keeps playing after the
 first one is shut down.
