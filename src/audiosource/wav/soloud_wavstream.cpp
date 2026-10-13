@@ -98,8 +98,15 @@ namespace SoLoud
 		if (aParent->mFilename)
 		{
 			DiskFile *df = new DiskFile;
+			// A file that is gone or unreadable when the stream is played
+			// leaves the instance without one; reading the closed DiskFile
+			// passed a null FILE to fread.
+			if (df->open(aParent->mFilename) != SO_NO_ERROR)
+			{
+				delete df;
+				return;
+			}
 			mFile = df;
-			df->open(aParent->mFilename);
 		}
 		else
 		if (aParent->mStreamFile)
@@ -397,6 +404,11 @@ namespace SoLoud
 
 	bool WavStreamInstance::hasEnded()
 	{
+		// Without a file (it could not be opened or decoded) nothing plays.
+		if (mFile == NULL)
+		{
+			return 1;
+		}
 		if (!(mFlags & AudioSourceInstance::LOOPING) && mOffset >= mParent->mSampleCount)
 		{
 			return 1;
