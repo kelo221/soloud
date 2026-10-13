@@ -1792,8 +1792,9 @@ namespace SoLoud
 					{
 						writesamples = ((SAMPLE_GRANULARITY * FIXPOINT_FRAC_MUL) - voice->mSrcOffset) / step_fixed + 1;
 
-						// avoid reading past the current buffer..
-						if (((writesamples * step_fixed + voice->mSrcOffset) >> FIXPOINT_FRAC_BITS) >= SAMPLE_GRANULARITY)
+						// avoid reading past the current buffer: drop the last frame
+						// only when it lands on the next block's first sample
+						if ((((writesamples - 1) * step_fixed + voice->mSrcOffset) >> FIXPOINT_FRAC_BITS) >= SAMPLE_GRANULARITY)
 							writesamples--;
 					}
 
@@ -1959,8 +1960,9 @@ namespace SoLoud
 					{
 						writesamples = ((SAMPLE_GRANULARITY * FIXPOINT_FRAC_MUL) - voice->mSrcOffset) / step_fixed + 1;
 
-						// avoid reading past the current buffer..
-						if (((writesamples * step_fixed + voice->mSrcOffset) >> FIXPOINT_FRAC_BITS) >= SAMPLE_GRANULARITY)
+						// avoid reading past the current buffer: drop the last frame
+						// only when it lands on the next block's first sample
+						if ((((writesamples - 1) * step_fixed + voice->mSrcOffset) >> FIXPOINT_FRAC_BITS) >= SAMPLE_GRANULARITY)
 							writesamples--;
 					}
 
