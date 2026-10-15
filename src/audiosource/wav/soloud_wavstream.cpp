@@ -304,6 +304,9 @@ namespace SoLoud
 		break;
 		case WAVSTREAM_OGG:
 			{
+				// At the end (also after a seek past it) nothing more is read.
+				if (mOffset >= mParent->mSampleCount)
+					return 0;
 				if (mOggFrameOffset < mOggFrameSize)
 				{
 					int b = getOggData(mOggOutputs, aBuffer, aSamplesToRead, aBufferSize, mOggFrameSize, mOggFrameOffset, mChannels);
@@ -321,9 +324,13 @@ namespace SoLoud
 					offset += b;
 					mOggFrameOffset += b;
 
+					// mOffset already counts these frames. A Vorbis packet that
+					// fails to decode ends the data, as it ends Wav::loadogg and
+					// as a short read ends the other formats.
 					if (mOffset >= mParent->mSampleCount || b == 0)
 					{
-						mOffset += offset;
+						if (mOffset < mParent->mSampleCount)
+							mOffset = mParent->mSampleCount;
 						return offset;
 					}
 				}
@@ -365,14 +372,57 @@ namespace SoLoud
 		// corrupted the heap. Gate on the real file type.
 		if (mParent->mFiletype == WAVSTREAM_OGG && mCodec.mOgg)
 		{
-			int pos = (int)floor(mBaseSamplerate * aSeconds);
-			stb_vorbis_seek(mCodec.mOgg, pos);
-			// Since the position that we just sought to might not be *exactly*
-			// the position we asked for, we're re-calculating the position just
-			// for the sake of correctness.
-			mOffset = stb_vorbis_get_sample_offset(mCodec.mOgg);
-			double newPosition = float(mOffset / mBaseSamplerate);
-			mStreamPosition = newPosition;
+			// Land on the frame the generic seek would: counted from the frames
+			// read, or from the start after a rewind. stb_vorbis_seek left the
+			// rest of the Vorbis frame holding the target in a buffer that
+			// stb_vorbis_get_frame_float skips, so the stream went on from the
+			// next Vorbis frame, after its target. Instead, decode the Vorbis
+			// frame holding the target and start inside it.
+			double offset = aSeconds - mStreamPosition;
+			if (offset <= 0)
+			{
+				rewind();
+				offset = aSeconds;
+			}
+			int frames = (int)floor(mBaseSamplerate * offset);
+			if (frames > 0)
+			{
+				unsigned long long target = (unsigned long long)mOffset + (unsigned int)frames;
+				mOggFrameSize = 0;
+				mOggFrameOffset = 0;
+				if (target >= mParent->mSampleCount)
+				{
+					mOffset = mParent->mSampleCount;
+				}
+				else if (stb_vorbis_seek_frame(mCodec.mOgg, (unsigned int)target) &&
+					stb_vorbis_get_sample_offset(mCodec.mOgg) >= 0 &&
+					(unsigned int)stb_vorbis_get_sample_offset(mCodec.mOgg) <= target)
+				{
+					unsigned int start = (unsigned int)stb_vorbis_get_sample_offset(mCodec.mOgg);
+					int size = stb_vorbis_get_frame_float(mCodec.mOgg, NULL, &mOggOutputs);
+					mOggFrameSize = size > 0 ? (unsigned int)size : 0;
+					mOggFrameOffset = (unsigned int)target - start;
+					if (mOggFrameOffset > mOggFrameSize)
+						mOggFrameOffset = mOggFrameSize;
+					mOffset = (unsigned int)target;
+				}
+				else
+				{
+					// stb_vorbis could not find the frame: decode up to it.
+					rewind();
+					unsigned int left = (unsigned int)target;
+					unsigned int step = mChannels ? mScratchSize / mChannels : 0;
+					while (left > 0 && step > 0)
+					{
+						unsigned int n = left < step ? left : step;
+						unsigned int got = getAudio(mScratch, n, n);
+						left -= n;
+						if (got < n)
+							break;
+					}
+				}
+			}
+			mStreamPosition = aSeconds;
 			return 0;
 		}
 		else {
@@ -389,6 +439,10 @@ namespace SoLoud
 			{
 				stb_vorbis_seek_start(mCodec.mOgg);
 			}
+			// stb_vorbis reuses the buffers the remaining frames point into.
+			mOggFrameSize = 0;
+			mOggFrameOffset = 0;
+			mOggOutputs = 0;
 			break;
 		case WAVSTREAM_FLAC:
 			if (mCodec.mFlac)
