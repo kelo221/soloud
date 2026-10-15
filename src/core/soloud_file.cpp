@@ -257,6 +257,10 @@ extern "C"
 	int Soloud_Filehack_fread(void *dst, int s, int c, Soloud_Filehack *f)
 	{
 		SoLoud::File *fp = (SoLoud::File *)f;
+		// fread reads nothing for an empty request; stb_vorbis makes one for
+		// an Ogg page without segments.
+		if (s <= 0 || c <= 0)
+			return 0;
 		return fp->read((unsigned char*)dst, s*c) / s;
 
 	}
