@@ -73,6 +73,7 @@ requests are still open there.
 | `oscillateVolume`, `oscillatePan`, `oscillateRelativePlaySpeed`, `oscillateGlobalVolume` and `oscillateFilterParameter` from a higher value to a lower one oscillated above the higher value instead of between the two: a volume oscillation from 1 to 0 went up to 2. | — | |
 | Resampled voices (a sound whose sample rate differs from the engine's, or any play speed other than 1) played slightly fast: at the end of every 512-frame source block the resampler skipped up to one step of the source. A 44.1 kHz sound on a 48 kHz engine ran about 0.09% fast, 0.1 s ahead after three minutes. | [#314] | |
 | Some FLAC files decoded to wrong samples: dr_flac summed the linear prediction in 32 bits whenever the sample size plus the prediction shift fit in 32 bits, so a predictor that overshoots full scale wrapped around. Encoders can produce these at 20 bits and above, for example on the side channel of a stereo file. Fixed as in dr_flac 0.12.35. | [dr_libs 713ffe6] | [@mackron] |
+| A looping Ogg Vorbis `WavStream` played a scrap of other audio at every loop: rewinding kept the Vorbis frame it was reading, whose buffers the decoder reuses. Seeking an Ogg stream landed up to one Vorbis frame after the target, and seeking past the end did not end it. Seeks now land on the same frame as for the other formats, still without decoding up to it. | — | |
 
 ### Multiple engines in one process
 
